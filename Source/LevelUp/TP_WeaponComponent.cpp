@@ -15,6 +15,8 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 {
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
+	// Full ammo by default
+	CurrentAmmoInMag = MaxAmmoInMag;
 }
 
 void UTP_WeaponComponent::Fire()
@@ -23,6 +25,13 @@ void UTP_WeaponComponent::Fire()
 	{
 		return;
 	}
+	
+	if (CurrentAmmoInMag <= 0)
+	{
+		return;
+	}
+	// Take a shoot
+	CurrentAmmoInMag -= 1;
 
 	// Try and fire a projectile
 	if (ProjectileClass != nullptr)
@@ -45,22 +54,18 @@ void UTP_WeaponComponent::Fire()
 		}
 	}
 
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
+	PlaySoundAndMontage(FireSound, FireAnimation);
+}
+
+void UTP_WeaponComponent::Reload()
+{
+	if (Character == nullptr)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+		return;
 	}
 
-	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
+	CurrentAmmoInMag = MaxAmmoInMag;
+	PlaySoundAndMontage(ReloadSound, ReloadAnimation);
 }
 
 void UTP_WeaponComponent::AttachWeapon(ALevelUpCharacter* TargetCharacter)
@@ -92,6 +97,8 @@ void UTP_WeaponComponent::AttachWeapon(ALevelUpCharacter* TargetCharacter)
 		{
 			// Fire
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Fire);
+			//Reload
+			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Reload);
 		}
 	}
 }
@@ -109,6 +116,26 @@ void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->RemoveMappingContext(FireMappingContext);
+		}
+	}
+}
+
+void UTP_WeaponComponent::PlaySoundAndMontage(USoundBase* Sound, UAnimMontage* AnimMontage) const
+{
+	// Try and play the sound if specified
+	if (Sound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, Sound, Character->GetActorLocation());
+	}
+
+	// Try and play a animation if specified
+	if (AnimMontage != nullptr)
+	{
+		// Get the animation object for the arms mesh
+		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+		if (AnimInstance != nullptr)
+		{
+			AnimInstance->Montage_Play(AnimMontage, 1.f);
 		}
 	}
 }
