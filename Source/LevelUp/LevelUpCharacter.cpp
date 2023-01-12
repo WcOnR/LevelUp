@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
+#include "InventoryComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "LevelUpProjectile.h"
 
@@ -14,9 +15,6 @@
 
 ALevelUpCharacter::ALevelUpCharacter()
 {
-	// Character doesnt have a rifle at start
-	bHasRifle = false;
-
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
@@ -34,16 +32,18 @@ ALevelUpCharacter::ALevelUpCharacter()
 	Mesh1P->CastShadow = false;
 	// Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 }
 
-void ALevelUpCharacter::SetHasRifle(bool bNewHasRifle)
+bool ALevelUpCharacter::IsRifleEquipped() const
 {
-	bHasRifle = bNewHasRifle;
-}
-
-bool ALevelUpCharacter::GetHasRifle()
-{
-	return bHasRifle;
+	if (!IsValid(Inventory))
+	{
+		return false;
+	}
+	// TODO:: should be true only if the rifle equipped
+	return Inventory->GetHasRifle();
 }
 
 void ALevelUpCharacter::BeginPlay()
