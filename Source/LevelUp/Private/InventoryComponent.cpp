@@ -8,8 +8,8 @@ UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	bHasRifle = false;
+	AmountOfAmmo = 0;
 }
-
 
 inline void UInventoryComponent::SetHasRifle(bool bNewHasRifle)
 {
@@ -19,5 +19,17 @@ inline void UInventoryComponent::SetHasRifle(bool bNewHasRifle)
 bool UInventoryComponent::GetHasRifle() const
 {
 	return bHasRifle;
+}
+
+void UInventoryComponent::AddAmmo(int32 Amount)
+{
+	AmountOfAmmo = FMath::Min(MaxAmountOfAmmo, AmountOfAmmo + Amount);
+}
+
+int32 UInventoryComponent::PopAmmo(int32 Amount)
+{
+	int32 Result = FMath::Min(Amount, AmountOfAmmo);
+	AmountOfAmmo -= Result;
+	return Result;
 }
 

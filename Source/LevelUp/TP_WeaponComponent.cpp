@@ -65,8 +65,14 @@ void UTP_WeaponComponent::Reload()
 		return;
 	}
 
-	CurrentAmmoInMag = MaxAmmoInMag;
-	PlaySoundAndMontage(ReloadSound, ReloadAnimation);
+	if (UInventoryComponent* Inventory = Character->FindComponentByClass<UInventoryComponent>())
+	{
+		CurrentAmmoInMag += Inventory->PopAmmo(MaxAmmoInMag - CurrentAmmoInMag);
+		if (CurrentAmmoInMag > 0)
+		{
+			PlaySoundAndMontage(ReloadSound, ReloadAnimation);
+		}
+	}
 }
 
 void UTP_WeaponComponent::AttachWeapon(ALevelUpCharacter* TargetCharacter)

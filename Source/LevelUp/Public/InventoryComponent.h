@@ -19,6 +19,14 @@ public:
 	void SetHasRifle(bool bNewHasRifle);
 	bool GetHasRifle() const;
 
+	void AddAmmo(int32 Amount);
+	int32 PopAmmo(int32 Amount);
+	int32 GetAmountOfAmmo() const { return AmountOfAmmo; }
+
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Weapon)
+	int32 MaxAmountOfAmmo = 20;
+
 	bool bHasRifle;
+	int32 AmountOfAmmo;
 };
