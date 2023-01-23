@@ -7,29 +7,42 @@
 UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-	bHasRifle = false;
+	Rifle = nullptr;
 	AmountOfAmmo = 0;
 }
 
-inline void UInventoryComponent::SetHasRifle(bool bNewHasRifle)
+inline void UInventoryComponent::SetRifle(AActor* NewRifle)
 {
-	bHasRifle = bNewHasRifle;
+	if (Rifle != NewRifle)
+	{
+		Rifle = NewRifle;
+		OnWeaponPickUp.Broadcast();
+	}
 }
 
-bool UInventoryComponent::GetHasRifle() const
+AActor* UInventoryComponent::GetRifle() const
 {
-	return bHasRifle;
+	return Rifle;
 }
 
 void UInventoryComponent::AddAmmo(int32 Amount)
 {
+	int32 OldAmountOfAmmo = AmountOfAmmo;
 	AmountOfAmmo = FMath::Min(MaxAmountOfAmmo, AmountOfAmmo + Amount);
+	if (AmountOfAmmo != OldAmountOfAmmo)
+	{
+		OnAmountOfAmmoChanged.Broadcast(AmountOfAmmo);
+	}
 }
 
 int32 UInventoryComponent::PopAmmo(int32 Amount)
 {
 	int32 Result = FMath::Min(Amount, AmountOfAmmo);
 	AmountOfAmmo -= Result;
+	if (Result > 0)
+	{
+		OnAmountOfAmmoChanged.Broadcast(AmountOfAmmo);
+	}
 	return Result;
 }
 

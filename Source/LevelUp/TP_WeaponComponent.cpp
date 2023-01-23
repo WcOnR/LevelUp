@@ -6,7 +6,6 @@
 #include "Camera/PlayerCameraManager.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "InventoryComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "LevelUpProjectile.h"
@@ -33,6 +32,7 @@ void UTP_WeaponComponent::Fire()
 	}
 	// Take a shoot
 	CurrentAmmoInMag -= 1;
+	OnAmountOfAmmoChanged.Broadcast(CurrentAmmoInMag);
 
 	// Try and fire a projectile
 	if (ProjectileClass != nullptr)
@@ -67,9 +67,11 @@ void UTP_WeaponComponent::Reload()
 
 	if (UInventoryComponent* Inventory = Character->FindComponentByClass<UInventoryComponent>())
 	{
+		int32 OldAmmoInMag = CurrentAmmoInMag;
 		CurrentAmmoInMag += Inventory->PopAmmo(MaxAmmoInMag - CurrentAmmoInMag);
-		if (CurrentAmmoInMag > 0)
+		if (CurrentAmmoInMag != OldAmmoInMag)
 		{
+			OnAmountOfAmmoChanged.Broadcast(CurrentAmmoInMag);
 			PlaySoundAndMontage(ReloadSound, ReloadAnimation);
 		}
 	}
@@ -89,7 +91,7 @@ void UTP_WeaponComponent::AttachWeapon(ALevelUpCharacter* TargetCharacter)
 
 	if (UInventoryComponent* Inventory = Character->FindComponentByClass<UInventoryComponent>())
 	{
-		Inventory->SetHasRifle(true);
+		Inventory->SetRifle(GetOwner());
 	}
 
 	// Set up action bindings

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "InventoryComponent.h"
 
 #include "TP_WeaponComponent.generated.h"
 
@@ -18,6 +19,8 @@ public:
 	/** Sets default values for this component's properties */
 	UTP_WeaponComponent();
 
+	FOnAmountOfAmmoChanged OnAmountOfAmmoChanged;
+
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void AttachWeapon(ALevelUpCharacter* TargetCharacter);
@@ -29,6 +32,8 @@ public:
 	/** Refill weapon ammo */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Reload();
+
+	int32 GetCurrentAmmoInMag() const { return CurrentAmmoInMag; }
 
 protected:
 	/** Ends gameplay for this component. */

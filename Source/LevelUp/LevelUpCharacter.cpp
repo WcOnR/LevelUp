@@ -43,7 +43,7 @@ bool ALevelUpCharacter::IsRifleEquipped() const
 		return false;
 	}
 	// TODO:: should be true only if the rifle equipped
-	return Inventory->GetHasRifle();
+	return IsValid(Inventory->GetRifle());
 }
 
 void ALevelUpCharacter::BeginPlay()
