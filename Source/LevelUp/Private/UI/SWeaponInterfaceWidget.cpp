@@ -5,7 +5,7 @@
 
 #include "GameFramework/HUD.h"
 #include "InventoryComponent.h"
-#include "../TP_WeaponComponent.h"
+#include "TP_WeaponComponent.h"
 
 SWeaponInterfaceWidget::SWeaponInterfaceWidget()
 {

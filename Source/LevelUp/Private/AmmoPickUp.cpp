@@ -3,8 +3,8 @@
 
 #include "AmmoPickUp.h"
 
-#include "../TP_PickUpComponent.h"
-#include "../LevelUpCharacter.h"
+#include "TP_PickUpComponent.h"
+#include "LevelUpCharacter.h"
 #include "InventoryComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
 
