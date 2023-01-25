@@ -37,7 +37,11 @@ void AAmmoPickUp::OnPickUp(ALevelUpCharacter* PickUpCharacter)
 
 	if (UInventoryComponent* Inventory = PickUpCharacter->FindComponentByClass<UInventoryComponent>())
 	{
-		Inventory->AddAmmo(AmountOfAmmo);
+		int32 CheatAmmoValue = 0;
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+		CheatAmmoValue = CVarAmmoPickUpAmount.GetValueOnGameThread();
+#endif
+		Inventory->AddAmmo(CheatAmmoValue > 0 ? CheatAmmoValue : AmountOfAmmo);
 	}
 	Destroy();
 }

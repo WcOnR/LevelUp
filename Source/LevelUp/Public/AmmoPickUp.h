@@ -10,6 +10,15 @@ class ALevelUpCharacter;
 class URotatingMovementComponent;
 class UTP_PickUpComponent;
 
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+static TAutoConsoleVariable<int32> CVarAmmoPickUpAmount(
+    TEXT("AmmoPickUp.Amount"),
+    0,
+    TEXT("Defines amount of ammo in all ammo PickUps.\n")
+    TEXT("<=0: off\n"),
+    ECVF_Scalability | ECVF_RenderThreadSafe);
+#endif
+
 UCLASS()
 class LEVELUP_API AAmmoPickUp : public AActor
 {

@@ -7,11 +7,19 @@
 
 #include "LevelUpGameMode.generated.h"
 
-UCLASS(minimalapi)
+UCLASS(minimalapi, Config = Game)
 class ALevelUpGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	ALevelUpGameMode();
+
+protected:
+	UFUNCTION(Exec)
+	void AddAmmo() const;
+
+protected:
+	UPROPERTY(Config)
+	int32 CheatAddAmmoAmount = 20;
 };
