@@ -10,6 +10,7 @@
 class SPauseMenuWidget;
 class SGameHUDWidget;
 class SWidget;
+class UTimerWidget;
 
 UCLASS()
 class LEVELUP_API AMainGameHUD : public AHUD
@@ -28,6 +29,12 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 	UTexture2D* CrosshairImg;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+	TSubclassOf<UTimerWidget> TimerWidgetClass;
+	
+	UPROPERTY()
+	UUserWidget* TimerWidget;
 
 	TSharedPtr<SPauseMenuWidget> PauseMenu;
 	TSharedPtr<SGameHUDWidget> GameHUD;

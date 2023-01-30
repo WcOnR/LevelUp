@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/SPauseMenuWidget.h"
 #include "UI/SGameHUDWidget.h"
+#include "UI/TimerWidget.h"
 #include "Widgets/SWeakWidget.h"
 
 AMainGameHUD::AMainGameHUD()
@@ -18,6 +19,10 @@ void AMainGameHUD::TogglePauseMenu()
 	if (bPauseMenuHidden)
 	{
 		ViewpotrClient->RemoveViewportWidgetContent(WidgetContainer.ToSharedRef());
+		if (IsValid(TimerWidget))
+		{
+			ViewpotrClient->RemoveViewportWidgetContent(TimerWidget->TakeWidget());
+		}
 		TSharedRef<SWidget> MainWidget = SAssignNew(WidgetContainer, SWeakWidget).PossiblyNullContent(PauseMenu.ToSharedRef());
 		ViewpotrClient->AddViewportWidgetContent(MainWidget);
 
@@ -32,6 +37,10 @@ void AMainGameHUD::TogglePauseMenu()
 		ViewpotrClient->RemoveViewportWidgetContent(WidgetContainer.ToSharedRef());
 		TSharedRef<SWidget> MainWidget = SAssignNew(WidgetContainer, SWeakWidget).PossiblyNullContent(GameHUD.ToSharedRef());
 		ViewpotrClient->AddViewportWidgetContent(MainWidget);
+		if (IsValid(TimerWidget))
+		{
+			ViewpotrClient->AddViewportWidgetContent(TimerWidget->TakeWidget());
+		}
 
 		if (IsValid(PlayerOwner))
 		{
@@ -58,9 +67,18 @@ void AMainGameHUD::BeginPlay()
 	}
 	PauseMenu = SNew(SPauseMenuWidget).OwnHUD(this);
 	GameHUD = SNew(SGameHUDWidget).OwnHUD(this).CrosshairImg(CrosshairBrush);
+	if (IsValid(TimerWidgetClass))
+	{
+		TimerWidget = CreateWidget(GetWorld(), TimerWidgetClass);
+	}
 
 	UGameViewportClient* ViewpotrClient = GetWorld()->GetGameViewport();
 
 	TSharedRef<SWidget> MainWidget = SAssignNew(WidgetContainer, SWeakWidget).PossiblyNullContent(GameHUD.ToSharedRef());
 	ViewpotrClient->AddViewportWidgetContent(MainWidget);
+
+	if (IsValid(TimerWidget))
+	{
+		ViewpotrClient->AddViewportWidgetContent(TimerWidget->TakeWidget());
+	}
 }
