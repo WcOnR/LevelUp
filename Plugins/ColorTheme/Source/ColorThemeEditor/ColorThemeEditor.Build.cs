@@ -28,6 +28,7 @@ public class ColorThemeEditor : ModuleRules
 				"SlateCore",
 				"ColorTheme",
 				"UnrealEd",
+				"EditorStyle",
 			});
 
 		PrivateIncludePathModuleNames.AddRange(

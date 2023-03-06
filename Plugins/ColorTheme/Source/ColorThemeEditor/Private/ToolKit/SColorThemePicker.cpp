@@ -16,6 +16,7 @@ void SColorThemePicker::Construct(const FArguments& InArgs)
 {
 	TargetColorAttribute = InArgs._TargetColorAttribute;
 	CurrentColorHSV = TargetColorAttribute.Get();
+	CurrentColorHSV.A = 1.0f;
 	OnColorCommitted = InArgs._OnColorCommitted;
 
 	bIsInteractive = false;

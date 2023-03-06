@@ -1,50 +1,38 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-#include "Containers/Array.h"
-#include "Modules/ModuleInterface.h"
-#include "Modules/ModuleManager.h"
+#include "ColorThemeEditor.h"
 
-#include "Actions/ColorThemeActions.h"
+#include "Tools/ColorThemeTool.h"
+#include "Tools/ColorThemeAssetTool.h"
 
 #define LOCTEXT_NAMESPACE "FColorThemeEditorModule"
 
-class FColorThemeEditorModule : public IModuleInterface
+void FColorThemeEditorModule::StartupModule() 
+{ 
+	if (!GIsEditor || IsRunningCommandlet())
+	{
+		return; 
+	}
+	CreateTools();
+	for (TSharedPtr<IToolInterface> Tool : Tools)
+	{
+		Tool->OnStartupModule();
+	}
+}
+
+void FColorThemeEditorModule::ShutdownModule()
 {
-public:
-
-	virtual void StartupModule() override 
-	{ 
-		//
-		RegisterAssetTypeActions();
-	}
-
-	virtual void ShutdownModule() override
+	Algo::Reverse(Tools);
+	for (TSharedPtr<IToolInterface> Tool : Tools)
 	{
-		//
-		UnregisterAssetTypeActions();
+		Tool->OnShutdownModule();
 	}
+	Tools.Empty();
+}
 
-	virtual bool SupportsDynamicReloading() override { return true; }
-
-protected:
-	void RegisterAssetTypeActions()
-	{
-		ColorThemeActions = MakeShared<FColorThemeAssetTypeActions>();
-		FAssetToolsModule::GetModule().Get().RegisterAssetTypeActions(ColorThemeActions.ToSharedRef());
-	}
-
-	void UnregisterAssetTypeActions()
-	{
-		if (!FModuleManager::Get().IsModuleLoaded("AssetTools"))
-		{
-			return;
-		}
-		FAssetToolsModule::GetModule().Get().UnregisterAssetTypeActions(ColorThemeActions.ToSharedRef());
-	}
-
-private:
-	TSharedPtr<FColorThemeAssetTypeActions> ColorThemeActions;
-};
-
-IMPLEMENT_MODULE(FColorThemeEditorModule, ColorThemeEditor);
+void FColorThemeEditorModule::CreateTools()
+{
+	Tools.Add(MakeShared<FColorThemeTool>());
+	Tools.Add(MakeShared<FColorThemeAssetTool>());
+}
 
 #undef LOCTEXT_NAMESPACE
