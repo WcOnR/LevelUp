@@ -1,12 +1,12 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "LoadVolume.h"
+#include "LoaderVolume.h"
 
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-ALoadVolume::ALoadVolume()
+ALoaderVolume::ALoaderVolume()
 {
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
@@ -19,7 +19,7 @@ ALoadVolume::ALoadVolume()
 	StaticMeshComponent->SetupAttachment(CollisionComp);
 }
 
-void ALoadVolume::OnBeginOverlap(UPrimitiveComponent* OverlappedComp,
+void ALoaderVolume::OnBeginOverlap(UPrimitiveComponent* OverlappedComp,
 									  AActor* OtherActor,
 									  UPrimitiveComponent* OtherComp,
 									  int32 OtherBodyIndex,
@@ -36,8 +36,8 @@ void ALoadVolume::OnBeginOverlap(UPrimitiveComponent* OverlappedComp,
 	}
 }
 
-void ALoadVolume::BeginPlay()
+void ALoaderVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ALoadVolume::OnBeginOverlap);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ALoaderVolume::OnBeginOverlap);
 }

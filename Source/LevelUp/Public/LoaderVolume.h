@@ -5,17 +5,17 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "LoadVolume.generated.h"
+#include "LoaderVolume.generated.h"
 
 class UBoxComponent;
 
 UCLASS(config = Game)
-class ALoadVolume : public AActor
+class ALoaderVolume : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	ALoadVolume();
+	ALoaderVolume();
 
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp,
