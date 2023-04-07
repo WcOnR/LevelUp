@@ -14,12 +14,4 @@ class ALevelUpGameMode : public AGameModeBase
 
 public:
 	ALevelUpGameMode();
-
-protected:
-	UFUNCTION(Exec)
-	void AddAmmo() const;
-
-protected:
-	UPROPERTY(Config)
-	int32 CheatAddAmmoAmount = 20;
 };

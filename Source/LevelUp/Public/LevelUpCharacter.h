@@ -5,35 +5,41 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "AbilitySystemInterface.h"
 
 #include "LevelUpCharacter.generated.h"
 
 class UInputComponent;
-class UInventoryComponent;
 class USkeletalMeshComponent;
+class UAbilityInputMapDataAsset;
+class UAbilitySystemComponent;
+class ULevelUpAttributeSet;
+class UWeaponAttributeSet;
+class ULevelUpGameplayAbility;
+class UGameplayEffect;
+class UTP_WeaponComponent;
 class USceneComponent;
 class UCameraComponent;
-class UAnimMontage;
-class USoundBase;
 
 UCLASS(config = Game)
-class ALevelUpCharacter : public ACharacter
+class ALevelUpCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	ALevelUpCharacter();
 
-	UFUNCTION(BlueprintPure, Category = Weapon)
-	bool IsRifleEquipped() const;
-
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	UWeaponAttributeSet* GetWeaponAttributeSet() const { return WeaponAttributeSet; }
+
 protected:
-	virtual void BeginPlay();
+	void BeginPlay() override;
+	void PossessedBy(AController* NewController) override;
+	void OnRep_PlayerState() override;
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -45,10 +51,10 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 
-public:
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	virtual void InitializeAttributes();
+	virtual void InitializeAbilities();
 
 private:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
@@ -58,19 +64,34 @@ private:
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-	
+
 	UPROPERTY(VisibleDefaultsOnly, Category = Component)
-	UInventoryComponent* Inventory;
+	UTP_WeaponComponent* Weapon;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Component)
+	UAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = AttributeSet)
+	ULevelUpAttributeSet* LevelUpAttributeSet;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = AttributeSet)
+	UWeaponAttributeSet* WeaponAttributeSet;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
+	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* JumpAction;
+	class UInputAction* LookAction;
 
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities, meta = (AllowPrivateAccess = "true"))
+	TArray<TSubclassOf<ULevelUpGameplayAbility>> DefaultAbilities;
 };

@@ -4,6 +4,8 @@
 #include "LevelUpPlayerController.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
 #include "UI/MainGameHUD.h"
 
 void ALevelUpPlayerController::SetupInputComponent()
@@ -22,5 +24,15 @@ void ALevelUpPlayerController::OnPauseAction()
 	if (AMainGameHUD* Hud = Cast<AMainGameHUD>(GetHUD()))
 	{
 		Hud->TogglePauseMenu();
+	}
+}
+
+void ALevelUpPlayerController::AcknowledgePossession(APawn* P)
+{
+	Super::AcknowledgePossession(P);
+
+	if (IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(P))
+	{
+		ASI->GetAbilitySystemComponent()->InitAbilityActorInfo(P, P);
 	}
 }

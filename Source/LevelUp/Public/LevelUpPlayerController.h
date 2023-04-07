@@ -20,6 +20,8 @@ public:
 protected:
 	void OnPauseAction();
 
+	void AcknowledgePossession(APawn* P);
+
 protected:
 	/** Pause Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))

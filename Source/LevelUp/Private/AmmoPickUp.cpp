@@ -5,7 +5,7 @@
 
 #include "TP_PickUpComponent.h"
 #include "LevelUpCharacter.h"
-#include "InventoryComponent.h"
+#include "AbilitySystemComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
 
 // Sets default values
@@ -34,14 +34,21 @@ void AAmmoPickUp::OnPickUp(ALevelUpCharacter* PickUpCharacter)
 	{
 		return;
 	}
-
-	if (UInventoryComponent* Inventory = PickUpCharacter->FindComponentByClass<UInventoryComponent>())
+	if (UAbilitySystemComponent* AbilitySystemComponent = PickUpCharacter->FindComponentByClass<UAbilitySystemComponent>())
 	{
-		int32 CheatAmmoValue = 0;
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-		CheatAmmoValue = CVarAmmoPickUpAmount.GetValueOnGameThread();
-#endif
-		Inventory->AddAmmo(CheatAmmoValue > 0 ? CheatAmmoValue : AmountOfAmmo);
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(PickUpEffect, 1, EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			int32 CheatAmmoValue = 0;
+	#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+			CheatAmmoValue = CVarAmmoPickUpAmount.GetValueOnGameThread();
+	#endif
+			SpecHandle.Data->SetSetByCallerMagnitude(PickUpAmmoTag, CheatAmmoValue > 0 ? CheatAmmoValue : AmountOfAmmo);
+			FActiveGameplayEffectHandle EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
 	}
 	Destroy();
 }

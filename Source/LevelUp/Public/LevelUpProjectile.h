@@ -8,6 +8,7 @@
 #include "LevelUpProjectile.generated.h"
 
 class USphereComponent;
+class UGameplayEffect;
 class UProjectileMovementComponent;
 
 UCLASS(config = Game)
@@ -31,6 +32,9 @@ public:
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
+	UFUNCTION(BlueprintCallable)
+	void SetInstigatedByPawn(APawn* Pawn) { InstigatedByPawn = Pawn; }
+
 protected:
 	/** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
@@ -40,6 +44,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Damage)
-	float Damage = 20.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> DamageEffect;
+
+	UPROPERTY()
+	APawn* InstigatedByPawn;
 };

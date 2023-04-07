@@ -6,7 +6,6 @@
 #include "GameFramework/HUD.h"
 #include "UI/MainGameHUD.h"
 #include "UI/SWeaponInterfaceWidget.h"
-#include "InventoryComponent.h"
 
 void SGameHUDWidget::Construct(const FArguments& InArgs)
 {
@@ -25,10 +24,7 @@ void SGameHUDWidget::Construct(const FArguments& InArgs)
 	{
 		if (APawn* PlayerPawn = PlayerController->GetPawn())
 		{
-			if (UInventoryComponent* Inventory = PlayerPawn->FindComponentByClass<UInventoryComponent>())
-			{
-				Inventory->OnWeaponPickUp.AddRaw(this, &SGameHUDWidget::ShowWeaponInterface);
-			}
+			ShowWeaponInterface();
 		}
 	}
 }

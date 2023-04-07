@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameplayTagContainer.h"
 #include "AmmoPickUp.generated.h"
 
 class ALevelUpCharacter;
 class URotatingMovementComponent;
 class UTP_PickUpComponent;
+class UGameplayEffect;
 
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 static TAutoConsoleVariable<int32> CVarAmmoPickUpAmount(
@@ -44,6 +46,12 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = Movement)
 	URotatingMovementComponent* RotatingMovement;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> PickUpEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Tag, meta = (AllowPrivateAccess = "true"))
+	FGameplayTag PickUpAmmoTag;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Ammo)
 	int32 AmountOfAmmo = 5;
 };

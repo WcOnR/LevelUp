@@ -3,8 +3,9 @@
 
 #include "UI/SWeaponInterfaceWidget.h"
 
+#include "WeaponAttributeSet.h"
 #include "GameFramework/HUD.h"
-#include "InventoryComponent.h"
+#include "LevelUpCharacter.h"
 #include "TP_WeaponComponent.h"
 
 SWeaponInterfaceWidget::SWeaponInterfaceWidget()
@@ -54,17 +55,14 @@ void SWeaponInterfaceWidget::Construct(const FArguments& InArgs)
 
 	if (APlayerController* PlayerController = OwnHUD->GetWorld()->GetFirstPlayerController())
 	{
-		if (APawn* PlayerPawn = PlayerController->GetPawn())
+		if (ALevelUpCharacter* PlayerCharacter = Cast<ALevelUpCharacter>(PlayerController->GetPawn()))
 		{
-			if (UInventoryComponent* Inventory = PlayerPawn->FindComponentByClass<UInventoryComponent>())
+			if (UWeaponAttributeSet* AttributeSet = PlayerCharacter->GetWeaponAttributeSet())
 			{
-				Inventory->OnAmountOfAmmoChanged.AddRaw(this, &SWeaponInterfaceWidget::UpdateAmmoInBag);
-				UpdateAmmoInBag(Inventory->GetAmountOfAmmo());
-				if (UTP_WeaponComponent* Weapon = Inventory->GetRifle()->FindComponentByClass<UTP_WeaponComponent>())
-				{
-					Weapon->OnAmountOfAmmoChanged.AddRaw(this, &SWeaponInterfaceWidget::UpdateAmmoInMag);
-					UpdateAmmoInMag(Weapon->GetCurrentAmmoInMag());
-				}
+				UpdateAmmoInBag(AttributeSet->GetAmountOfAmmo());
+				UpdateAmmoInMag(AttributeSet->GetAmmoInMag());
+				AttributeSet->OnAmountOfAmmoChanged.AddRaw(this, &SWeaponInterfaceWidget::UpdateAmmoInBag);
+				AttributeSet->OnAmmoInMagChanged.AddRaw(this, &SWeaponInterfaceWidget::UpdateAmmoInMag);
 			}
 		}
 	}

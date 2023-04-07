@@ -2,13 +2,18 @@
 
 #include "LevelUpCharacter.h"
 
+#include <GameplayEffectTypes.h>
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "TP_WeaponComponent.h"
+#include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
-#include "InventoryComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "LevelUpProjectile.h"
+#include "LevelUpAttributeSet.h"
+#include "WeaponAttributeSet.h"
+#include "LevelUpGameplayAbility.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ALevelUpCharacter
@@ -30,36 +35,51 @@ ALevelUpCharacter::ALevelUpCharacter()
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
-	// Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
-}
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
-bool ALevelUpCharacter::IsRifleEquipped() const
-{
-	if (!IsValid(Inventory))
-	{
-		return false;
-	}
-	// TODO:: should be true only if the rifle equipped
-	return IsValid(Inventory->GetRifle());
+	LevelUpAttributeSet = CreateDefaultSubobject<ULevelUpAttributeSet>(TEXT("CommonAttributeSet"));
+	WeaponAttributeSet = CreateDefaultSubobject<UWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
+	
+	Weapon = CreateDefaultSubobject<UTP_WeaponComponent>(TEXT("TP_WeaponComponent"));
+	Weapon->SetupAttachment(Mesh1P, FName(TEXT("GripPoint")));
 }
 
 void ALevelUpCharacter::BeginPlay()
 {
-	// Call the base class
 	Super::BeginPlay();
-
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	Weapon->AttachWeapon(this);
+}
+
+void ALevelUpCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		InitializeAttributes();
+		InitializeAbilities();
+	}
+
+	SetOwner(NewController);
+}
+
+void ALevelUpCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	InitializeAttributes();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -95,14 +115,52 @@ void ALevelUpCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		for (int32 i = 0; i < DefaultAbilities.Num(); ++i)
+		{
+			const TSubclassOf<ULevelUpGameplayAbility>& Ability = DefaultAbilities[i];
+			UInputAction* Input = Ability.GetDefaultObject()->Input;
+			EnhancedInputComponent->BindAction(Input, ETriggerEvent::Triggered, AbilitySystemComponent, &UAbilitySystemComponent::AbilityLocalInputPressed, i);
+			EnhancedInputComponent->BindAction(Input, ETriggerEvent::Completed, AbilitySystemComponent, &UAbilitySystemComponent::AbilityLocalInputReleased, i);
+		}
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ALevelUpCharacter::Move);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ALevelUpCharacter::Look);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////// Ability System
+
+ UAbilitySystemComponent* ALevelUpCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void ALevelUpCharacter::InitializeAttributes()
+{
+	if (AbilitySystemComponent && DefaultAttributeEffect)
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
+
+		if (SpecHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+}
+
+void ALevelUpCharacter::InitializeAbilities()
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (int32 i = 0; i < DefaultAbilities.Num(); ++i)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DefaultAbilities[i], 1, i, this));
+		}
 	}
 }
