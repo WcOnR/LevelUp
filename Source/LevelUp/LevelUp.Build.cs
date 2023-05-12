@@ -25,7 +25,8 @@ public class LevelUp : ModuleRules
 			"GameplayTags", 
 			"GameplayTasks", 
 			"OnlineSubsystem",
-			"OnlineSubsystemSteam"
+			"OnlineSubsystemSteam",
+			"HTTP"
 		});
 	}
 }
