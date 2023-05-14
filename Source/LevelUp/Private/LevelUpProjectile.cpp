@@ -34,6 +34,8 @@ ALevelUpProjectile::ALevelUpProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+
+	Mass = 100.0f;
 }
 
 void ALevelUpProjectile::OnHit(
@@ -42,7 +44,7 @@ void ALevelUpProjectile::OnHit(
 	// Only add impulse and destroy projectile if we hit a physics
 	if (IsValid(InstigatedByPawn) && (OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+		OtherComp->AddImpulseAtLocation(GetVelocity() * Mass, GetActorLocation());
 		if (UAbilitySystemComponent* SourceASComponent = InstigatedByPawn->FindComponentByClass<UAbilitySystemComponent>())
 		{
 			FGameplayEffectContextHandle EffectContext = SourceASComponent->MakeEffectContext();

@@ -8,6 +8,8 @@
 #include "LevelUpCharacter.h"
 #include "TP_WeaponComponent.h"
 
+#define LOCTEXT_NAMESPACE "WeaponInterface"
+
 SWeaponInterfaceWidget::SWeaponInterfaceWidget()
 {
 	AmmoInMag = 0;
@@ -47,8 +49,8 @@ void SWeaponInterfaceWidget::Construct(const FArguments& InArgs)
 		.Padding(AmmoTextPadding)
 		[
 			SAssignNew(AmmoText, STextBlock)
+			.Text(LOCTEXT("-", "0/0"))
 			.Font(AmmoTextStyle)
-			.Justification(ETextJustify::Right)
 		]
 	];
 	// clang-format on

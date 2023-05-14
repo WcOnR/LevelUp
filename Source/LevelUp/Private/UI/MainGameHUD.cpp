@@ -48,7 +48,6 @@ void AMainGameHUD::TogglePauseMenu()
 			PlayerOwner->SetInputMode(FInputModeGameOnly());
 		}
 	}
-	UGameplayStatics::SetGamePaused(GetWorld(), bPauseMenuHidden);
 	bPauseMenuHidden = !bPauseMenuHidden;
 }
 

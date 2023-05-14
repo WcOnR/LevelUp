@@ -13,7 +13,6 @@ void SPauseMenuWidget::Construct(const FArguments& InArgs)
 	OwnHUD = InArgs._OwnHUD;
 	bCanSupportFocus = true;
 
-	const FMargin ContentPadding = FMargin(750.f, 300.f);
 	const FMargin ButtonPadding = FMargin(10.f);
 
 	const FText PauseText = LOCTEXT("PauseTitle", "PAUSE");
@@ -41,13 +40,13 @@ void SPauseMenuWidget::Construct(const FArguments& InArgs)
 			.BlurStrength(5.f)
 		]
 		+ SOverlay::Slot()
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		.Padding(ContentPadding)
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
 		[
 			SNew(SVerticalBox)
 			// Pause text
 			+ SVerticalBox::Slot()
+			.Padding(ButtonPadding)
 			[
 				SNew(STextBlock)
 				.Font(PauseTextStyle)
