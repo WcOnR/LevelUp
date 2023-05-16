@@ -4,12 +4,31 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStaticsTypes.h"
 
 #include "LevelUpProjectile.generated.h"
 
 class USphereComponent;
 class UGameplayEffect;
 class UProjectileMovementComponent;
+
+USTRUCT(BlueprintType)
+struct LEVELUP_API FProjectileData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Impact)
+	float Mass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	float Radius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	float LaunchVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effects)
+	TSubclassOf<UGameplayEffect> DamageEffect;
+};
 
 UCLASS(config = Game)
 class ALevelUpProjectile : public AActor
@@ -19,34 +38,48 @@ class ALevelUpProjectile : public AActor
 public:
 	ALevelUpProjectile();
 
-	/** called when projectile hits something */
-	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComp,
-			   AActor* OtherActor,
-			   UPrimitiveComponent* OtherComp,
-			   FVector NormalImpulse,
-			   const FHitResult& Hit);
+	void SimulatePath(float CreateonTimeStamp);
+	static void SimulateHit(const FProjectileData& SimData,
+							APawn* Instigator,
+							const FVector& Location,
+							const FVector& Velocity,
+							AActor* OtherActor,
+							UPrimitiveComponent* OtherComp);
 
-	/** Returns CollisionComp subobject **/
-	USphereComponent* GetCollisionComp() const { return CollisionComp; }
-	/** Returns ProjectileMovement subobject **/
-	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+	void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	void Tick(float DeltaSeconds) override;
+
+	const FProjectileData& GetData() const { return Data; }
 
 protected:
-	/** Sphere collision component */
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	USphereComponent* CollisionComp;
+	void BeginPlay() override;
 
-	/** Projectile movement component */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UProjectileMovementComponent* ProjectileMovement;
+	UFUNCTION()
+	void OnRep_TrueLocation();
 
+	void PredictPath(float LifeTime);
+
+	void HandleHit(AActor* OtherActor, UPrimitiveComponent* OtherComp);
+
+	void OnLifeTimeEnd();
+
+protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	float Mass;
+	FProjectileData Data;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects, meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UGameplayEffect> DamageEffect;
+	UPROPERTY(ReplicatedUsing = OnRep_TrueLocation)
+	FVector TrueLocation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", AllowPrivateAccess = "true"))
-	APawn* InstigatedByPawn;
+	FVector ClientStartLocation;
+	float ClientSinceUpdate;
+	float ClientSinceLastUpdate;
+
+	UPROPERTY()
+	TArray<FPredictProjectilePathPointData> PathData;
+
+	UPROPERTY()
+	float BeginPlayTimeStamp;
+
+	UPROPERTY()
+	AGameStateBase* GameState;
 };
