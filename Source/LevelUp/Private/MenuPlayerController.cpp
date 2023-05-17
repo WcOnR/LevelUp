@@ -42,6 +42,8 @@ void AMenuPlayerController::Join(int32 Index)
 
 void AMenuPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	UGameViewportClient* ViewpotrClient = GetWorld()->GetGameViewport();
-	ViewpotrClient->RemoveViewportWidgetContent(StartupMenuWidget->TakeWidget());
+	if (UGameViewportClient* ViewpotrClient = GetWorld()->GetGameViewport())
+	{
+		ViewpotrClient->RemoveViewportWidgetContent(StartupMenuWidget->TakeWidget());
+	}
 }

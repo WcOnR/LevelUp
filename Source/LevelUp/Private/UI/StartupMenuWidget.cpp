@@ -17,7 +17,7 @@ void UStartupMenuWidget::NativeConstruct()
 
 	check(PlayerOwner);
 	PlayerOwner->bShowMouseCursor = true;
-	PlayerOwner->SetInputMode(FInputModeUIOnly());
+	PlayerOwner->SetInputMode(FInputModeGameAndUI());
 
 	HostButton->OnClicked.AddDynamic(this, &UStartupMenuWidget::OnHostButton);
 	FindButton->OnClicked.AddDynamic(this, &UStartupMenuWidget::OnFindButton);
