@@ -21,9 +21,9 @@ struct FServerData
 	UPROPERTY(BlueprintReadOnly)
 	FString Name;
 	UPROPERTY(BlueprintReadOnly)
-	int32 CurrentPlayers;
+	int32 CurrentPlayers = -1;
 	UPROPERTY(BlueprintReadOnly)
-	int32 MaxPlayers;
+	int32 MaxPlayers = -1;
 	FString HostUserName;
 };
 

@@ -18,13 +18,13 @@ struct LEVELUP_API FProjectileData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Impact)
-	float Mass;
+	float Mass = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
-	float Radius;
+	float Radius = 20.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
-	float LaunchVelocity;
+	float LaunchVelocity = 1500.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effects)
 	TSubclassOf<UGameplayEffect> DamageEffect;

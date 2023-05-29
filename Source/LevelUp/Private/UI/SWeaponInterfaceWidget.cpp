@@ -5,6 +5,7 @@
 
 #include "WeaponAttributeSet.h"
 #include "GameFramework/HUD.h"
+#include "GameFramework/PlayerController.h"
 #include "LevelUpCharacter.h"
 #include "TP_WeaponComponent.h"
 

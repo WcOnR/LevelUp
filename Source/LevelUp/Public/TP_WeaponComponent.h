@@ -21,15 +21,15 @@ struct LEVELUP_API FClientProjectileData
 	UPROPERTY()
 	TSubclassOf<ALevelUpProjectile> ProjectileClass;
 	UPROPERTY()
-	FVector StartPos;
+	FVector StartPos = FVector::ZeroVector;
 	UPROPERTY()
-	FVector Dir;
+	FVector Dir = FVector::XAxisVector;
 	UPROPERTY()
-	int64 ProjectilePtr;
+	int64 ProjectilePtr = 0;
 	UPROPERTY()
-	float MaxLifeTime;
+	float MaxLifeTime = 0.0f;
 	UPROPERTY()
-	float TimeStamp;
+	float TimeStamp = 0.0f;
 };
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))

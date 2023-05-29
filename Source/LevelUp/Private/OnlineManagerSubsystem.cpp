@@ -4,6 +4,7 @@
 #include "OnlineManagerSubsystem.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
+#include "GameFramework/PlayerController.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogOnlineSubsystem, Log, All);
 DEFINE_LOG_CATEGORY(LogOnlineSubsystem);

@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "LevelUpAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 // Sets default values
 ABreakableActor::ABreakableActor()

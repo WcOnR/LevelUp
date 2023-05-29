@@ -6,6 +6,7 @@
 #include "GameFramework/HUD.h"
 #include "UI/MainGameHUD.h"
 #include "UI/SWeaponInterfaceWidget.h"
+#include "GameFramework/PlayerController.h"
 
 void SGameHUDWidget::Construct(const FArguments& InArgs)
 {

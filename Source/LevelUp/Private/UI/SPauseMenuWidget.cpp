@@ -5,6 +5,7 @@
 
 #include "UI/MainGameHUD.h"
 #include "Widgets/Layout/SBackgroundBlur.h"
+#include "GameFramework/PlayerController.h"
 
 #define LOCTEXT_NAMESPACE "PauseMenu"
 

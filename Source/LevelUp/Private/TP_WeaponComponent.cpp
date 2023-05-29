@@ -2,6 +2,7 @@
 
 #include "TP_WeaponComponent.h"
 #include "LevelUpCharacter.h"
+#include "Engine/LocalPlayer.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/KismetMathLibrary.h"

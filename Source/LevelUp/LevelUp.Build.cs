@@ -14,7 +14,8 @@ public class LevelUp : ModuleRules
 			"Engine", 
 			"InputCore", 
 			"HeadMountedDisplay", 
-			"EnhancedInput" 
+			"EnhancedInput",
+			"UnrealEd"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] { 
