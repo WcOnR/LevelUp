@@ -12,6 +12,29 @@ class ALevelUpCharacter;
 class UInputMappingContext; 
 
 USTRUCT()
+struct LEVELUP_API FLaunchRay
+{
+	GENERATED_BODY()
+
+	FLaunchRay() = default;
+	FLaunchRay(const FVector& O, const FVector& D) : Origin(O), Dir(D) {}
+
+	FVector Origin = FVector::ZeroVector;
+	FVector Dir = FVector::XAxisVector;
+
+	bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess);
+};
+
+template <>
+struct LEVELUP_API TStructOpsTypeTraits<FLaunchRay> : public TStructOpsTypeTraitsBase2<FLaunchRay>
+{
+	enum
+	{
+		WithNetSerializer = true,
+	};
+};
+
+USTRUCT()
 struct LEVELUP_API FClientProjectileData
 {
 	GENERATED_BODY()
@@ -21,9 +44,7 @@ struct LEVELUP_API FClientProjectileData
 	UPROPERTY()
 	TSubclassOf<ALevelUpProjectile> ProjectileClass;
 	UPROPERTY()
-	FVector StartPos = FVector::ZeroVector;
-	UPROPERTY()
-	FVector Dir = FVector::XAxisVector;
+	FLaunchRay LaunchRay;
 	UPROPERTY()
 	int64 ProjectilePtr = 0;
 	UPROPERTY()

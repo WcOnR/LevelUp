@@ -27,7 +27,8 @@ public class LevelUp : ModuleRules
 			"GameplayTasks", 
 			"OnlineSubsystem",
 			"OnlineSubsystemSteam",
-			"HTTP"
+			"HTTP",
+			"NetCore",
 		});
 	}
 }

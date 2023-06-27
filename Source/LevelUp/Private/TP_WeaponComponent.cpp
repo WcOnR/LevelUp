@@ -3,12 +3,21 @@
 #include "TP_WeaponComponent.h"
 #include "LevelUpCharacter.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/NetSerialization.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
+
+
+bool FLaunchRay::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+{
+	bOutSuccess = SerializePackedVector<1, 20>(Origin, Ar);
+	bOutSuccess &= SerializeFixedVector<1, 16>(Dir, Ar);
+	return true;
+}
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -60,8 +69,7 @@ void UTP_WeaponComponent::Shoot(TSubclassOf<ALevelUpProjectile> ProjectileClass)
 	FClientProjectileData ClientData;
 	ClientData.Data = Projectile->GetData();
 	ClientData.ProjectileClass = ProjectileClass;
-	ClientData.StartPos = Projectile->GetActorLocation();
-	ClientData.Dir = Dir;
+	ClientData.LaunchRay = FLaunchRay(Projectile->GetActorLocation(), Dir);
 	ClientData.ProjectilePtr = reinterpret_cast<int64>(Projectile);
 	ClientData.MaxLifeTime = Projectile->InitialLifeSpan;
 	ClientData.TimeStamp = GameState->GetServerWorldTimeSeconds();
@@ -89,7 +97,7 @@ void UTP_WeaponComponent::Server_Fire_Implementation(const FClientProjectileData
 	AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
 	check(GameState);
 	float LifeTime = GameState->GetServerWorldTimeSeconds() - ProjectileData.TimeStamp;
-	FPredictProjectilePathParams Params(ProjectileData.Data.Radius, ProjectileData.StartPos, ProjectileData.Dir * ProjectileData.Data.LaunchVelocity, LifeTime);
+	FPredictProjectilePathParams Params(ProjectileData.Data.Radius, ProjectileData.LaunchRay.Origin, ProjectileData.LaunchRay.Dir * ProjectileData.Data.LaunchVelocity, LifeTime);
 	Params.bTraceWithCollision = true;
 	Params.bTraceComplex = false;
 	Params.ActorsToIgnore = {GetOwner()};
@@ -97,7 +105,7 @@ void UTP_WeaponComponent::Server_Fire_Implementation(const FClientProjectileData
 	FPredictProjectilePathResult PredictResult;
 	bool bHit = UGameplayStatics::PredictProjectilePath(this, Params, PredictResult);
 	int32 PathDataNum = PredictResult.PathData.Num();
-	FPredictProjectilePathPointData LastPathData(ProjectileData.StartPos, ProjectileData.Dir + ProjectileData.Data.LaunchVelocity, 0.0f);
+	FPredictProjectilePathPointData LastPathData(ProjectileData.LaunchRay.Origin, ProjectileData.LaunchRay.Dir + ProjectileData.Data.LaunchVelocity, 0.0f);
 	if (PathDataNum > 0)
 	{
 		LastPathData = PredictResult.PathData[PathDataNum - 1];
@@ -117,8 +125,8 @@ void UTP_WeaponComponent::Server_Fire_Implementation(const FClientProjectileData
 		SpawnParameters.Owner = GetOwner();
 		SpawnParameters.Instigator = OwnerPawn;
 		ALevelUpProjectile* Projectile = GetWorld()->SpawnActor<ALevelUpProjectile>(ProjectileData.ProjectileClass, 
-																					ProjectileData.StartPos, 
-																					ProjectileData.Dir.Rotation(), 
+																					ProjectileData.LaunchRay.Origin, 
+																					ProjectileData.LaunchRay.Dir.Rotation(), 
 																					SpawnParameters);
 		Projectile->SimulatePath(ProjectileData.TimeStamp);
 		Client_DestroyFakeProjectile(ProjectileData.ProjectilePtr);
