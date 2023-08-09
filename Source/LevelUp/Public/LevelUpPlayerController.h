@@ -20,10 +20,19 @@ public:
 protected:
 	void OnPauseAction();
 
+	void OnSaveGame();
+	void OnLoadGame();
+
 	void AcknowledgePossession(APawn* P);
 
 protected:
 	/** Pause Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* PauseAction;
+	/** Save Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SaveAction;
+	/** Load Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LoadAction;
 };
