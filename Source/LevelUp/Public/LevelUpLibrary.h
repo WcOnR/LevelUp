@@ -41,4 +41,10 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Utilities|FlowControl", meta=(Latent, WorldContext="WorldContextObject", LatentInfo="LatentInfo", Keywords="input"))
 	static void WaitGameplayInput(const UObject* WorldContextObject, FKey Key, struct FLatentActionInfo LatentInfo);
+
+	UFUNCTION(BlueprintCallable, CustomThunk, meta = (CustomStructureParam = "OutValue", BlueprintInternalUseOnly = "true"))
+	static bool GetValueByPropertyName(UObject* Target, FName PropertyName, int32& OutValue);
+
+private:
+	DECLARE_FUNCTION(execGetValueByPropertyName);
 };

@@ -29,6 +29,9 @@ public class LevelUp : ModuleRules
 			"OnlineSubsystemSteam",
 			"HTTP",
 			"NetCore",
+			"KismetCompiler",
+			"BlueprintGraph",
+			"GraphEditor",
 		});
 	}
 }
