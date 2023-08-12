@@ -25,6 +25,22 @@ public:
 	virtual void UpdateOperation(FLatentResponse& Response) override;
 };
 
+namespace LevelUp
+{
+	template <typename ObjectType>
+	static ObjectType* FindOrLoadObject(const FString& ObjectPath)
+	{
+		ObjectType* Object = FindObject<ObjectType>(nullptr, *ObjectPath);
+		if (!Object)
+		{
+			Object = LoadObject<ObjectType>(nullptr, *ObjectPath);
+		}
+
+		return Object;
+	}
+}
+
+
 UCLASS()
 class LEVELUP_API ULevelUpLibrary : public UBlueprintFunctionLibrary
 {
