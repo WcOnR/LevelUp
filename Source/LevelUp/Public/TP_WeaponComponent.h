@@ -10,6 +10,8 @@
 
 class ALevelUpCharacter;
 class UInputMappingContext; 
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 USTRUCT()
 struct LEVELUP_API FLaunchRay
@@ -65,15 +67,40 @@ public:
 	void AttachWeapon(ALevelUpCharacter* TargetCharacter);
 
 	UFUNCTION(BlueprintCallable)
-	void Shoot(TSubclassOf<ALevelUpProjectile> ProjectileClass);
+	void Shoot();
+	UFUNCTION(BlueprintCallable)
+	void StopShoot();
+	UFUNCTION(BlueprintCallable)
+	void AltShoot();
+	UFUNCTION(BlueprintCallable)
+	void StopAltShoot();
+	
+	void ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjClass);
 
 	UFUNCTION(Server, reliable)
-	void Server_Fire(const FClientProjectileData& ProjectileData);
+	void Server_ThrowProjectile(const FClientProjectileData& ProjectileData);
 
 	UFUNCTION(Client, reliable)
 	void Client_DestroyFakeProjectile(int64 ProjectilePtr);
 
-public:
+protected:
+	virtual void BeginPlay() override;
+	void OnPositionUpdated();
+
+	bool GetTargetHit(FHitResult& OutHit);
+	void ApplyHitEffect(const FHitResult& OutHit);
+	FVector GetTargetDirection(const FVector& Hit);
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	TSubclassOf<ALevelUpProjectile> ProjectileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UNiagaraSystem* ShootingEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effects)
+	TSubclassOf<UGameplayEffect> DamageEffect;
+
+	UPROPERTY()
+	UNiagaraComponent* ShootingFX;
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	FVector MuzzleOffset;

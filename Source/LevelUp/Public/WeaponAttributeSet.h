@@ -18,6 +18,7 @@ public:
 	UWeaponAttributeSet();
 
 	void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
@@ -47,4 +48,16 @@ public:
 	LEVELUP_ATTRIBUTE_ACCESSORS(UWeaponAttributeSet, ProjectileDamage);
 	UFUNCTION()
 	virtual void OnRep_ProjectileDamage(const FGameplayAttributeData& OldProjectileDamage);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxTemperatureCapacity)
+	FGameplayAttributeData MaxTemperatureCapacity;
+	LEVELUP_ATTRIBUTE_ACCESSORS(UWeaponAttributeSet, MaxTemperatureCapacity);
+	UFUNCTION()
+	virtual void OnRep_MaxTemperatureCapacity(const FGameplayAttributeData& OldMaxTemperatureCapacity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_TemperatureCapacity)
+	FGameplayAttributeData TemperatureCapacity;
+	LEVELUP_ATTRIBUTE_ACCESSORS(UWeaponAttributeSet, TemperatureCapacity);
+	UFUNCTION()
+	virtual void OnRep_TemperatureCapacity(const FGameplayAttributeData& OldTemperatureCapacity);
 };

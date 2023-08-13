@@ -2,6 +2,7 @@
 
 #include "TP_WeaponComponent.h"
 #include "LevelUpCharacter.h"
+#include "Camera/CameraComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/NetSerialization.h"
 #include "EnhancedInputComponent.h"
@@ -10,7 +11,15 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
+#include "GameplayEffect.h"
+#include "AbilitySystemComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
+static const FName MuzzleSlot(TEXT("Muzzle"));
+static const FName EndPointParam(TEXT("EndPoint"));
+static const FName ImpactParam(TEXT("IsImpactEnabled"));
 
 bool FLaunchRay::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
@@ -38,7 +47,34 @@ void UTP_WeaponComponent::AttachWeapon(ALevelUpCharacter* TargetCharacter)
 	}
 }
 
-void UTP_WeaponComponent::Shoot(TSubclassOf<ALevelUpProjectile> ProjectileClass)
+void UTP_WeaponComponent::Shoot()
+{
+	ThrowProjectile(ProjectileClass);
+}
+
+void UTP_WeaponComponent::StopShoot()
+{
+}
+
+void UTP_WeaponComponent::AltShoot()
+{
+	FHitResult OutHit;
+	bool bHitted = GetTargetHit(OutHit);
+	ShootingFX = UNiagaraFunctionLibrary::SpawnSystemAttached(ShootingEffect, this, MuzzleSlot,
+															 FVector::Zero(), GetTargetDirection(OutHit.Location).Rotation(),
+															 EAttachLocation::SnapToTarget, false);
+}
+
+void UTP_WeaponComponent::StopAltShoot()
+{
+	if (IsValid(ShootingFX))
+	{
+		ShootingFX->DestroyComponent();
+		ShootingFX = nullptr;
+	}
+}
+
+void UTP_WeaponComponent::ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjClass)
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	check(OwnerPawn);
@@ -64,16 +100,80 @@ void UTP_WeaponComponent::Shoot(TSubclassOf<ALevelUpProjectile> ProjectileClass)
 	const FVector StartPos = FrontOffset + RightOffset * MuzzleOffset.Y + UpOffset * MuzzleOffset.Z + GetSocketLocation(TEXT("Muzzle"));
 	const FVector Dir = SpawnParameters.Instigator->GetActorForwardVector();
 
-	ALevelUpProjectile* Projectile = GetWorld()->SpawnActor<ALevelUpProjectile>(ProjectileClass, StartPos, Dir.Rotation(), SpawnParameters);
+	ALevelUpProjectile* Projectile = GetWorld()->SpawnActor<ALevelUpProjectile>(ProjClass, StartPos, Dir.Rotation(), SpawnParameters);
 
 	FClientProjectileData ClientData;
 	ClientData.Data = Projectile->GetData();
-	ClientData.ProjectileClass = ProjectileClass;
+	ClientData.ProjectileClass = ProjClass;
 	ClientData.LaunchRay = FLaunchRay(Projectile->GetActorLocation(), Dir);
 	ClientData.ProjectilePtr = reinterpret_cast<int64>(Projectile);
 	ClientData.MaxLifeTime = Projectile->InitialLifeSpan;
 	ClientData.TimeStamp = GameState->GetServerWorldTimeSeconds();
-	Server_Fire(ClientData);
+	Server_ThrowProjectile(ClientData);
+}
+
+void UTP_WeaponComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	FTimerHandle TimerHandle;
+	GetOwner()->GetWorldTimerManager().SetTimer(TimerHandle, this, &UTP_WeaponComponent::OnPositionUpdated, 0.05f, true);
+}
+
+void UTP_WeaponComponent::OnPositionUpdated()
+{
+	if (!IsValid(ShootingFX))
+	{
+		return;
+	}
+	FHitResult OutHit;
+	bool bHitted = GetTargetHit(OutHit);
+	ShootingFX->SetRelativeRotation(GetTargetDirection(OutHit.Location).Rotation());
+	ShootingFX->SetVectorParameter(EndPointParam, FVector(FVector::Distance(OutHit.Location, GetSocketLocation(MuzzleSlot)), 0.0f, 0.0f));
+	ShootingFX->SetIntParameter(ImpactParam, bHitted);
+	if (bHitted)
+	{
+		ApplyHitEffect(OutHit);
+	}
+}
+
+bool UTP_WeaponComponent::GetTargetHit(FHitResult& OutHit)
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	UCameraComponent* Camera = OwnerPawn->FindComponentByClass<UCameraComponent>();
+
+	FVector End = Camera->GetComponentLocation() + Camera->GetForwardVector() * 1500;
+
+	FCollisionQueryParams CollisionParams;
+	if (GetWorld()->LineTraceSingleByChannel(OutHit, Camera->GetComponentLocation(), End, ECC_Visibility, CollisionParams))
+	{
+		return true;
+	}
+	else
+	{
+		OutHit.Location = End;
+	}
+	return false;
+}
+
+FVector UTP_WeaponComponent::GetTargetDirection(const FVector& Hit)
+{
+	const FTransform DirTransform((Hit - GetSocketLocation(MuzzleSlot)).GetUnsafeNormal());
+	const FTransform MuzzleTransform(GetSocketRotation(MuzzleSlot));
+	return (DirTransform * MuzzleTransform.Inverse()).GetLocation();
+}
+
+void UTP_WeaponComponent::ApplyHitEffect(const FHitResult& OutHit)
+{
+	APawn* Instigator = Cast<APawn>(GetOwner());
+	UAbilitySystemComponent* SourceASComponent = Instigator->FindComponentByClass<UAbilitySystemComponent>();
+	UAbilitySystemComponent* TargetASComponent = OutHit.GetActor()->FindComponentByClass<UAbilitySystemComponent>();
+	if (SourceASComponent && TargetASComponent)
+	{
+		FGameplayEffectContextHandle EffectContext = SourceASComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(Instigator);
+		FGameplayEffectSpecHandle SpecHandle = SourceASComponent->MakeOutgoingSpec(DamageEffect, 1, EffectContext);
+		SourceASComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASComponent);
+	}
 }
 
 void UTP_WeaponComponent::Client_DestroyFakeProjectile_Implementation(int64 ProjectilePtr)
@@ -85,7 +185,7 @@ void UTP_WeaponComponent::Client_DestroyFakeProjectile_Implementation(int64 Proj
 	}
 }
 
-void UTP_WeaponComponent::Server_Fire_Implementation(const FClientProjectileData& ProjectileData)
+void UTP_WeaponComponent::Server_ThrowProjectile_Implementation(const FClientProjectileData& ProjectileData)
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (!IsValid(OwnerPawn))

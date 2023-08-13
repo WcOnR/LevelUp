@@ -142,16 +142,18 @@ void ALevelUpCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 
 void ALevelUpCharacter::InitializeAttributes()
 {
-	if (AbilitySystemComponent && DefaultAttributeEffect)
+	if (AbilitySystemComponent)
 	{
 		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
-
-		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
-
-		if (SpecHandle.IsValid())
+		for (TSubclassOf<UGameplayEffect> Effect : DefaultAttributeEffect)
 		{
-			FActiveGameplayEffectHandle EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(Effect, 1, EffectContext);
+
+			if (SpecHandle.IsValid())
+			{
+				FActiveGameplayEffectHandle EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
 		}
 	}
 }

@@ -65,7 +65,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Component)
+	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = Component, meta = (AllowPrivateAccess = "true"))
 	UTP_WeaponComponent* Weapon;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Component)
@@ -90,7 +90,7 @@ private:
 	class UInputAction* MoveAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects, meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<UGameplayEffect> DefaultAttributeEffect;
+	TArray<TSubclassOf<UGameplayEffect>> DefaultAttributeEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<ULevelUpGameplayAbility>> DefaultAbilities;

@@ -32,6 +32,7 @@ public class LevelUp : ModuleRules
 			"KismetCompiler",
 			"BlueprintGraph",
 			"GraphEditor",
+			"Niagara",
 		});
 	}
 }
