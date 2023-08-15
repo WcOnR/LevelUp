@@ -26,7 +26,7 @@ struct LEVELUP_API FProjectileData
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
 	float LaunchVelocity = 1500.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effects)
+	UPROPERTY()
 	TSubclassOf<UGameplayEffect> DamageEffect;
 };
 

@@ -50,6 +50,25 @@ ALevelUpCharacter::ALevelUpCharacter()
 	Weapon->SetupAttachment(Mesh1P, FName(TEXT("GripPoint")));
 }
 
+void ALevelUpCharacter::AddWeaponAbilities(const TArray<TSubclassOf<ULevelUpGameplayAbility>>& WeaponAbilities)
+{
+	int32 Offset = DefaultAbilities.Num();
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (int32 i = 0; i < WeaponAbilities.Num(); ++i)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(WeaponAbilities[i], 1, Offset + i, this));
+		}
+	}
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
+	{
+		for (int32 i = 0; i < WeaponAbilities.Num(); ++i)
+		{
+			BindAbilityAction(EnhancedInputComponent, WeaponAbilities[i], Offset + i);
+		}
+	}
+}
+
 void ALevelUpCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -120,9 +139,7 @@ void ALevelUpCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 		for (int32 i = 0; i < DefaultAbilities.Num(); ++i)
 		{
 			const TSubclassOf<ULevelUpGameplayAbility>& Ability = DefaultAbilities[i];
-			UInputAction* Input = Ability.GetDefaultObject()->Input;
-			EnhancedInputComponent->BindAction(Input, ETriggerEvent::Triggered, AbilitySystemComponent, &UAbilitySystemComponent::AbilityLocalInputPressed, i);
-			EnhancedInputComponent->BindAction(Input, ETriggerEvent::Completed, AbilitySystemComponent, &UAbilitySystemComponent::AbilityLocalInputReleased, i);
+			BindAbilityAction(EnhancedInputComponent, Ability, i);
 		}
 
 		// Moving
@@ -167,4 +184,11 @@ void ALevelUpCharacter::InitializeAbilities()
 			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DefaultAbilities[i], 1, i, this));
 		}
 	}
+}
+
+void ALevelUpCharacter::BindAbilityAction(UEnhancedInputComponent* EnhancedInputComponent, TSubclassOf<ULevelUpGameplayAbility> Ability, int32 Id)
+{
+	UInputAction* Input = Ability.GetDefaultObject()->Input;
+	EnhancedInputComponent->BindAction(Input, ETriggerEvent::Triggered, AbilitySystemComponent, &UAbilitySystemComponent::AbilityLocalInputPressed, Id);
+	EnhancedInputComponent->BindAction(Input, ETriggerEvent::Completed, AbilitySystemComponent, &UAbilitySystemComponent::AbilityLocalInputReleased, Id);
 }

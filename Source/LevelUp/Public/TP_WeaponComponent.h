@@ -12,6 +12,7 @@ class ALevelUpCharacter;
 class UInputMappingContext; 
 class UNiagaraSystem;
 class UNiagaraComponent;
+struct FWeaponData;
 
 USTRUCT()
 struct LEVELUP_API FLaunchRay
@@ -55,6 +56,17 @@ struct LEVELUP_API FClientProjectileData
 	float TimeStamp = 0.0f;
 };
 
+USTRUCT()
+struct LEVELUP_API FRayTraceData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UNiagaraComponent* Fx;
+	UPROPERTY()
+	int32 SlotId;
+};
+
 UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class LEVELUP_API UTP_WeaponComponent : public USkeletalMeshComponent
 {
@@ -67,15 +79,11 @@ public:
 	void AttachWeapon(ALevelUpCharacter* TargetCharacter);
 
 	UFUNCTION(BlueprintCallable)
-	void Shoot();
+	void Shoot(ULevelUpGameplayAbility* Ability);
 	UFUNCTION(BlueprintCallable)
-	void StopShoot();
-	UFUNCTION(BlueprintCallable)
-	void AltShoot();
-	UFUNCTION(BlueprintCallable)
-	void StopAltShoot();
+	void StopShoot(ULevelUpGameplayAbility* Ability);
 	
-	void ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjClass);
+	void ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjClass, TSubclassOf<UGameplayEffect> DamageEffect);
 
 	UFUNCTION(Server, reliable)
 	void Server_ThrowProjectile(const FClientProjectileData& ProjectileData);
@@ -87,24 +95,28 @@ protected:
 	virtual void BeginPlay() override;
 	void OnPositionUpdated();
 
-	bool GetTargetHit(FHitResult& OutHit);
-	void ApplyHitEffect(const FHitResult& OutHit);
+	bool GetTargetHit(FHitResult& OutHit, float MaxDistance);
+	void ApplyHitEffect(const FHitResult& OutHit, TSubclassOf<UGameplayEffect> DamageEffect);
 	FVector GetTargetDirection(const FVector& Hit);
 
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	TSubclassOf<ALevelUpProjectile> ProjectileClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	UNiagaraSystem* ShootingEffect;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effects)
-	TSubclassOf<UGameplayEffect> DamageEffect;
+	void LoadWeaponData();
+	int32 FindWeaponData(ULevelUpGameplayAbility* Ability, FWeaponData& Data) const;
 
-	UPROPERTY()
-	UNiagaraComponent* ShootingFX;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Data)
+	UDataTable* WeaponDataTable;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Data)
+	TArray<FName> WeaponSlots;
+
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	FVector MuzzleOffset;
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* FireMappingContext;
+	
+	UPROPERTY()
+	TArray<FWeaponData> WeaponSlotsData;
+	UPROPERTY()
+	FRayTraceData RayTraceData;
 };

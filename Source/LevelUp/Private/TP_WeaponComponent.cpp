@@ -16,6 +16,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "WeaponData.h"
 
 static const FName MuzzleSlot(TEXT("Muzzle"));
 static const FName EndPointParam(TEXT("EndPoint"));
@@ -47,34 +48,39 @@ void UTP_WeaponComponent::AttachWeapon(ALevelUpCharacter* TargetCharacter)
 	}
 }
 
-void UTP_WeaponComponent::Shoot()
+void UTP_WeaponComponent::Shoot(ULevelUpGameplayAbility* Ability)
 {
-	ThrowProjectile(ProjectileClass);
-}
-
-void UTP_WeaponComponent::StopShoot()
-{
-}
-
-void UTP_WeaponComponent::AltShoot()
-{
-	FHitResult OutHit;
-	bool bHitted = GetTargetHit(OutHit);
-	ShootingFX = UNiagaraFunctionLibrary::SpawnSystemAttached(ShootingEffect, this, MuzzleSlot,
+	FWeaponData Data;
+	int32 SlotId = FindWeaponData(Ability, Data);
+	if (SlotId == -1)
+	{
+		return;
+	}
+	if (IsValid(Data.ProjectileClass.Get()))
+	{
+		ThrowProjectile(Data.ProjectileClass.Get(), Data.DamageEffect.Get());
+	}
+	else if (IsValid(Data.RayTraceFx.Get()))
+	{
+		FHitResult OutHit;
+		bool bHitted = GetTargetHit(OutHit, Data.MaxDistance);
+		RayTraceData.SlotId = SlotId;
+		RayTraceData.Fx = UNiagaraFunctionLibrary::SpawnSystemAttached(Data.RayTraceFx.Get(), this, MuzzleSlot,
 															 FVector::Zero(), GetTargetDirection(OutHit.Location).Rotation(),
 															 EAttachLocation::SnapToTarget, false);
-}
-
-void UTP_WeaponComponent::StopAltShoot()
-{
-	if (IsValid(ShootingFX))
-	{
-		ShootingFX->DestroyComponent();
-		ShootingFX = nullptr;
 	}
 }
 
-void UTP_WeaponComponent::ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjClass)
+void UTP_WeaponComponent::StopShoot(ULevelUpGameplayAbility* Ability)
+{
+	if (IsValid(RayTraceData.Fx))
+	{
+		RayTraceData.Fx->DestroyComponent();
+		RayTraceData.Fx = nullptr;
+	}
+}
+
+void UTP_WeaponComponent::ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjClass, TSubclassOf<UGameplayEffect> DamageEffect)
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	check(OwnerPawn);
@@ -104,6 +110,7 @@ void UTP_WeaponComponent::ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjCl
 
 	FClientProjectileData ClientData;
 	ClientData.Data = Projectile->GetData();
+	ClientData.Data.DamageEffect = DamageEffect;
 	ClientData.ProjectileClass = ProjClass;
 	ClientData.LaunchRay = FLaunchRay(Projectile->GetActorLocation(), Dir);
 	ClientData.ProjectilePtr = reinterpret_cast<int64>(Projectile);
@@ -115,33 +122,46 @@ void UTP_WeaponComponent::ThrowProjectile(TSubclassOf<ALevelUpProjectile> ProjCl
 void UTP_WeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	LoadWeaponData();
+	if (ALevelUpCharacter* Char = Cast<ALevelUpCharacter>(GetOwner()))
+	{
+
+		TArray<TSubclassOf<ULevelUpGameplayAbility>> Abilities;
+		for (const FWeaponData& Slot : WeaponSlotsData)
+		{
+			Abilities.Add(Slot.Ability.Get());
+		}
+		Char->AddWeaponAbilities(Abilities);
+	}
+
 	FTimerHandle TimerHandle;
 	GetOwner()->GetWorldTimerManager().SetTimer(TimerHandle, this, &UTP_WeaponComponent::OnPositionUpdated, 0.05f, true);
 }
 
 void UTP_WeaponComponent::OnPositionUpdated()
 {
-	if (!IsValid(ShootingFX))
+	if (!IsValid(RayTraceData.Fx))
 	{
 		return;
 	}
 	FHitResult OutHit;
-	bool bHitted = GetTargetHit(OutHit);
-	ShootingFX->SetRelativeRotation(GetTargetDirection(OutHit.Location).Rotation());
-	ShootingFX->SetVectorParameter(EndPointParam, FVector(FVector::Distance(OutHit.Location, GetSocketLocation(MuzzleSlot)), 0.0f, 0.0f));
-	ShootingFX->SetIntParameter(ImpactParam, bHitted);
+	const FWeaponData& WeaponData = WeaponSlotsData[RayTraceData.SlotId];
+	bool bHitted = GetTargetHit(OutHit, WeaponData.MaxDistance);
+	RayTraceData.Fx->SetRelativeRotation(GetTargetDirection(OutHit.Location).Rotation());
+	RayTraceData.Fx->SetVectorParameter(EndPointParam, FVector(FVector::Distance(OutHit.Location, GetSocketLocation(MuzzleSlot)), 0.0f, 0.0f));
+	RayTraceData.Fx->SetIntParameter(ImpactParam, bHitted);
 	if (bHitted)
 	{
-		ApplyHitEffect(OutHit);
+		ApplyHitEffect(OutHit, WeaponData.DamageEffect.Get());
 	}
 }
 
-bool UTP_WeaponComponent::GetTargetHit(FHitResult& OutHit)
+bool UTP_WeaponComponent::GetTargetHit(FHitResult& OutHit, float MaxDistance)
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	UCameraComponent* Camera = OwnerPawn->FindComponentByClass<UCameraComponent>();
 
-	FVector End = Camera->GetComponentLocation() + Camera->GetForwardVector() * 1500;
+	FVector End = Camera->GetComponentLocation() + Camera->GetForwardVector() * MaxDistance;
 
 	FCollisionQueryParams CollisionParams;
 	if (GetWorld()->LineTraceSingleByChannel(OutHit, Camera->GetComponentLocation(), End, ECC_Visibility, CollisionParams))
@@ -162,7 +182,7 @@ FVector UTP_WeaponComponent::GetTargetDirection(const FVector& Hit)
 	return (DirTransform * MuzzleTransform.Inverse()).GetLocation();
 }
 
-void UTP_WeaponComponent::ApplyHitEffect(const FHitResult& OutHit)
+void UTP_WeaponComponent::ApplyHitEffect(const FHitResult& OutHit, TSubclassOf<UGameplayEffect> DamageEffect)
 {
 	APawn* Instigator = Cast<APawn>(GetOwner());
 	UAbilitySystemComponent* SourceASComponent = Instigator->FindComponentByClass<UAbilitySystemComponent>();
@@ -173,6 +193,46 @@ void UTP_WeaponComponent::ApplyHitEffect(const FHitResult& OutHit)
 		EffectContext.AddSourceObject(Instigator);
 		FGameplayEffectSpecHandle SpecHandle = SourceASComponent->MakeOutgoingSpec(DamageEffect, 1, EffectContext);
 		SourceASComponent->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASComponent);
+	}
+}
+
+int32 UTP_WeaponComponent::FindWeaponData(ULevelUpGameplayAbility* Ability, FWeaponData& Data) const
+{
+	for (int32 i = 0; i < WeaponSlotsData.Num(); ++i)
+	{
+		if (WeaponSlotsData[i].Ability.Get() == Ability->GetClass())
+		{
+			Data = WeaponSlotsData[i];
+			return i;
+		}
+	}
+	return -1;
+}
+
+void UTP_WeaponComponent::LoadWeaponData()
+{
+	FString OwnerName = IsValid(GetOwner()) ? GetOwner()->GetActorNameOrLabel() : TEXT("NONE");
+	FString SkeletalMeshName = IsValid(GetSkinnedAsset()) ? GetSkinnedAsset()->GetName() : TEXT("NONE");
+	checkf(WeaponDataTable, TEXT("[Owner:%s][Skel:%s] WeaponDataTable wasn't setup"), *OwnerName, *SkeletalMeshName);
+	static const FString ContextString(TEXT("Weapon Data"));
+	for (const FName& Slot : WeaponSlots)
+	{
+		if (FWeaponData* Data = WeaponDataTable->FindRow<FWeaponData>(Slot, ContextString, true))
+		{
+			WeaponSlotsData.Add(*Data);
+		}
+	}
+	if (WeaponSlotsData.Num() == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Can't find weapon slots data"));
+	}
+	// Load all required assets 
+	for (FWeaponData& Data : WeaponSlotsData)
+	{
+		Data.ProjectileClass.LoadSynchronous();
+		Data.RayTraceFx.LoadSynchronous();
+		Data.Ability.LoadSynchronous();
+		Data.DamageEffect.LoadSynchronous();
 	}
 }
 

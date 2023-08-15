@@ -10,6 +10,7 @@
 #include "LevelUpCharacter.generated.h"
 
 class UInputComponent;
+class UEnhancedInputComponent;
 class USkeletalMeshComponent;
 class UAbilityInputMapDataAsset;
 class UAbilitySystemComponent;
@@ -36,6 +37,8 @@ public:
 
 	UWeaponAttributeSet* GetWeaponAttributeSet() const { return WeaponAttributeSet; }
 
+	void AddWeaponAbilities(const TArray<TSubclassOf<ULevelUpGameplayAbility>>& WeaponAbilities);
+
 protected:
 	void BeginPlay() override;
 	void PossessedBy(AController* NewController) override;
@@ -55,6 +58,8 @@ protected:
 
 	virtual void InitializeAttributes();
 	virtual void InitializeAbilities();
+
+	void BindAbilityAction(UEnhancedInputComponent* EnhancedInputComponent, TSubclassOf<ULevelUpGameplayAbility> Ability, int32 Id);
 
 private:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
