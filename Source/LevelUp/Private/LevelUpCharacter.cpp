@@ -15,6 +15,8 @@
 #include "LevelUpAttributeSet.h"
 #include "WeaponAttributeSet.h"
 #include "LevelUpGameplayAbility.h"
+#include "GrenadeLauncherComponent.h"
+#include "PathPredictComponent.h"
 #include "GameFramework/PlayerController.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -48,6 +50,12 @@ ALevelUpCharacter::ALevelUpCharacter()
 	
 	Weapon = CreateDefaultSubobject<UTP_WeaponComponent>(TEXT("TP_WeaponComponent"));
 	Weapon->SetupAttachment(Mesh1P, FName(TEXT("GripPoint")));
+
+	GrenadeLauncher = CreateDefaultSubobject<UGrenadeLauncherComponent>(TEXT("GrenadeLauncher"));
+	GrenadeLauncher->SetupAttachment(FirstPersonCameraComponent);
+
+	PathPredict = CreateDefaultSubobject<UPathPredictComponent>(TEXT("PathPredict"));
+	PathPredict->SetupAttachment(GrenadeLauncher);
 }
 
 void ALevelUpCharacter::AddWeaponAbilities(const TArray<TSubclassOf<ULevelUpGameplayAbility>>& WeaponAbilities)

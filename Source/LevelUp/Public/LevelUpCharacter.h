@@ -21,6 +21,8 @@ class UGameplayEffect;
 class UTP_WeaponComponent;
 class USceneComponent;
 class UCameraComponent;
+class UGrenadeLauncherComponent;
+class UPathPredictComponent;
 
 UCLASS(config = Game)
 class ALevelUpCharacter : public ACharacter, public IAbilitySystemInterface
@@ -75,6 +77,12 @@ private:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Component)
 	UAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = Component, meta = (AllowPrivateAccess = "true"))
+	UGrenadeLauncherComponent* GrenadeLauncher;
+
+	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = Component, meta = (AllowPrivateAccess = "true"))
+	UPathPredictComponent* PathPredict;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = AttributeSet)
 	ULevelUpAttributeSet* LevelUpAttributeSet;
