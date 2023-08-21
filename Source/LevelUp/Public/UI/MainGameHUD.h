@@ -26,6 +26,9 @@ public:
 protected:
 	void BeginPlay() override;
 
+	UFUNCTION()
+	void OnHUDDestroyed(AActor* DestroyedActor);
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 	UTexture2D* CrosshairImg;

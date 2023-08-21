@@ -96,7 +96,7 @@ protected:
 	void OnPositionUpdated();
 
 	bool GetTargetHit(FHitResult& OutHit, float MaxDistance);
-	void ApplyHitEffect(const FHitResult& OutHit, TSubclassOf<UGameplayEffect> DamageEffect);
+	void ApplyHitEffect(const FHitResult& OutHit, TSubclassOf<UGameplayEffect> DamageEffect, float Impact);
 	FVector GetTargetDirection(const FVector& Hit);
 
 	void LoadWeaponData();

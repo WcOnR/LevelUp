@@ -80,4 +80,14 @@ void AMainGameHUD::BeginPlay()
 	{
 		ViewpotrClient->AddViewportWidgetContent(TimerWidget->TakeWidget());
 	}
+	OnDestroyed.AddDynamic(this, &AMainGameHUD::OnHUDDestroyed);
+}
+
+void AMainGameHUD::OnHUDDestroyed(AActor* DestroyedActor)
+{
+	if (IsValid(TimerWidget))
+	{
+		UGameViewportClient* ViewpotrClient = GetWorld()->GetGameViewport();
+		ViewpotrClient->RemoveViewportWidgetContent(TimerWidget->TakeWidget());
+	}
 }

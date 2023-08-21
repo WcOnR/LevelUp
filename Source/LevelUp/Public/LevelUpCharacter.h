@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "AbilitySystemInterface.h"
+#include "GenericTeamAgentInterface.h"
 
 #include "LevelUpCharacter.generated.h"
 
@@ -25,7 +26,7 @@ class UGrenadeLauncherComponent;
 class UPathPredictComponent;
 
 UCLASS(config = Game)
-class ALevelUpCharacter : public ACharacter, public IAbilitySystemInterface
+class ALevelUpCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -40,6 +41,8 @@ public:
 	UWeaponAttributeSet* GetWeaponAttributeSet() const { return WeaponAttributeSet; }
 
 	void AddWeaponAbilities(const TArray<TSubclassOf<ULevelUpGameplayAbility>>& WeaponAbilities);
+
+	FGenericTeamId GetGenericTeamId() const override { return 0; }
 
 protected:
 	void BeginPlay() override;

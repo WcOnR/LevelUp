@@ -33,6 +33,7 @@ public class LevelUp : ModuleRules
 			"BlueprintGraph",
 			"GraphEditor",
 			"Niagara",
+			"AIModule",
 		});
 	}
 }

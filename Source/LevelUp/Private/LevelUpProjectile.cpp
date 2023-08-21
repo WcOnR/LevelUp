@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameplayEffect.h"
 #include "Net/UnrealNetwork.h"
+#include "DamageReceiverInterface.h"
 
 #include "AbilitySystemComponent.h"
 
@@ -50,6 +51,10 @@ void ALevelUpProjectile::SimulateHit(const FProjectileData& SimData,
 			if (OtherComp->IsSimulatingPhysics())
 			{
 				OtherComp->AddImpulseAtLocation(Velocity * SimData.Mass, Location);
+			}
+			if (IDamageReceiverInterface* DamageReceiver = Cast<IDamageReceiverInterface>(OtherActor))
+			{
+				DamageReceiver->ReceiveDamage(Location, Velocity);
 			}
 			UAbilitySystemComponent* SourceASComponent = Instigator->FindComponentByClass<UAbilitySystemComponent>();
 			UAbilitySystemComponent* TargetASComponent = OtherActor->FindComponentByClass<UAbilitySystemComponent>();

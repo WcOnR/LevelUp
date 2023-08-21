@@ -17,6 +17,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "WeaponData.h"
+#include "DamageReceiverInterface.h"
 
 static const FName MuzzleSlot(TEXT("Muzzle"));
 static const FName EndPointParam(TEXT("EndPoint"));
@@ -152,7 +153,7 @@ void UTP_WeaponComponent::OnPositionUpdated()
 	RayTraceData.Fx->SetIntParameter(ImpactParam, bHitted);
 	if (bHitted)
 	{
-		ApplyHitEffect(OutHit, WeaponData.DamageEffect.Get());
+		ApplyHitEffect(OutHit, WeaponData.DamageEffect.Get(), WeaponData.Impact);
 	}
 }
 
@@ -182,11 +183,21 @@ FVector UTP_WeaponComponent::GetTargetDirection(const FVector& Hit)
 	return (DirTransform * MuzzleTransform.Inverse()).GetLocation();
 }
 
-void UTP_WeaponComponent::ApplyHitEffect(const FHitResult& OutHit, TSubclassOf<UGameplayEffect> DamageEffect)
+void UTP_WeaponComponent::ApplyHitEffect(const FHitResult& OutHit, TSubclassOf<UGameplayEffect> DamageEffect, float Impact)
 {
+	AActor* OtherActor = OutHit.GetActor();
+	UPrimitiveComponent* OtherComp = OutHit.GetComponent();
+	if (OtherComp->IsSimulatingPhysics())
+	{
+		OtherComp->AddImpulseAtLocation(-OutHit.ImpactNormal * Impact, OutHit.Location);
+	}
+	if (IDamageReceiverInterface* DamageReceiver = Cast<IDamageReceiverInterface>(OtherActor))
+	{
+		DamageReceiver->ReceiveDamage(OutHit.Location, -OutHit.ImpactNormal * Impact);
+	}
 	APawn* Instigator = Cast<APawn>(GetOwner());
 	UAbilitySystemComponent* SourceASComponent = Instigator->FindComponentByClass<UAbilitySystemComponent>();
-	UAbilitySystemComponent* TargetASComponent = OutHit.GetActor()->FindComponentByClass<UAbilitySystemComponent>();
+	UAbilitySystemComponent* TargetASComponent = OtherActor->FindComponentByClass<UAbilitySystemComponent>();
 	if (SourceASComponent && TargetASComponent)
 	{
 		FGameplayEffectContextHandle EffectContext = SourceASComponent->MakeEffectContext();
