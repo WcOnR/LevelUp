@@ -12,7 +12,6 @@
 
 class UAbilitySystemComponent;
 class ULevelUpAttributeSet;
-class ULevelUpGameplayAbility;
 class UGameplayEffect;
 
 UCLASS(config = Game)
@@ -34,7 +33,6 @@ protected:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	virtual void InitializeAttributes();
-	virtual void InitializeAbilities();
 
 	UFUNCTION()
 	void OnDeath();
@@ -50,9 +48,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Effects, meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UGameplayEffect>> DefaultAttributeEffect;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Abilities, meta = (AllowPrivateAccess = "true"))
-	TArray<TSubclassOf<ULevelUpGameplayAbility>> DefaultAbilities;
 
 	TPair<FVector, FVector> LastReceivedDamage;
 };

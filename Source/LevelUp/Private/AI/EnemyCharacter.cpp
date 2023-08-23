@@ -7,7 +7,6 @@
 #include "AIController.h"
 #include "AbilitySystemComponent.h"
 #include "LevelUpAttributeSet.h"
-#include "LevelUpGameplayAbility.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -60,17 +59,6 @@ void AEnemyCharacter::InitializeAttributes()
 			{
 				FActiveGameplayEffectHandle EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 			}
-		}
-	}
-}
-
-void AEnemyCharacter::InitializeAbilities()
-{
-	if (HasAuthority() && AbilitySystemComponent)
-	{
-		for (int32 i = 0; i < DefaultAbilities.Num(); ++i)
-		{
-			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DefaultAbilities[i], 1, i, this));
 		}
 	}
 }
